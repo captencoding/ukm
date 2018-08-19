@@ -23,24 +23,21 @@ module.exports = {
             )}
             )
     },
-    authenticate: (req, res, next) => {
-        userModel.findOne({
-            email: req.body.email
-        }, (err, userInfo) => {
-            if(err) {
-                next(err)
-            }
-            else {
-                if(bcrypt.compareSync(req.body.password, userInfo.password)){
-                    const token = jwt.sign({id: userInfo._id}, 
-                    req.app.get('impactbyte'), {expiresIn: '1h'})
-
-                    res.json({status: 'OK!', message: 'Success', data: {user: userInfo, token: token}})
-                }
-                else{
-                    res.json({status: 'Error', message: 'invalid email or password', data: 'access denied!'})
-                }
-            }
-        })
-    }
+    authenticate(req, res, next) {
+        const { email, password } = req.body
+        if (email && password){
+            User.findOne({where:{email}}).then(user => {
+                bcrypt.compare(password, user.password).then(result => {
+                    if(result){
+                        console.log('okey benar');
+                        const token = jwt.sign({id: user.id}, 'Secretbanget', { expiresIn: '1h' })
+                        res.json({status:"success", message: "user found!!!", data:{user: user, token:token}})
+                    }else {
+                        res.json({status:"error", message: "Invalid email/password!!!"});
+                    }
+                })
+            })
+        }
+        
+       },
 }
